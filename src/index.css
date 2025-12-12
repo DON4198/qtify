@@ -1,0 +1,18 @@
+/* index.css - global styles, CSS variables, and font import */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
+:root {
+  /* Replace hex values with Figma values if provided */
+  --color-primary: #121212; /* navbar background */
+  --color-black: #000000;
+  --color-green: #1DB954; /* use Figma green if different */
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: "Poppins", sans-serif;
+  background: white;
+  box-sizing: border-box;
+}

@@ -1,0 +1,35 @@
+﻿/* src/components/Carousel/Carousel.module.css */
+
+.carouselWrapper {
+  position: relative;
+  width: 100%;
+  padding: 10px 0;
+  box-sizing: border-box;
+}
+
+.slide {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.navLeft {
+  position: absolute;
+  left: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 40;
+}
+
+.navRight {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 40;
+}
+
+@media (max-width: 600px) {
+  .navLeft { left: 2px; }
+  .navRight { right: 2px; }
+}
