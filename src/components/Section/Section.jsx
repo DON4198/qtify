@@ -14,7 +14,7 @@ import Tab from "@mui/material/Tab";
  *  - title: string
  *  - endpoint: data endpoint to fetch items (albums or songs)
  *  - mode: "albums" (default) | "songs"
- *  - tabsEndpoint: (optional) endpoint to fetch genres for mode="songs" (e.g. /genres)
+ *  - tabsEndpoint: (optional) endpoint to fetch genres for mode="songs"
  */
 export default function Section({
   title = "Section",
@@ -27,13 +27,16 @@ export default function Section({
   const [error, setError] = useState(null);
 
   // Only used for songs mode:
-  const [genres, setGenres] = useState([]); // each { key, label }
+  const [genres, setGenres] = useState([]); // array of { key, label }
   const [selectedGenreKey, setSelectedGenreKey] = useState("all"); // "all" or genre.key
 
-  // UI toggle: only used for albums mode (collapse/showAll)
+  // UI toggle: only used for albums mode (grid <-> carousel)
   const [showCarousel, setShowCarousel] = useState(false);
 
-  // Fetch items (albums or songs) from endpoint
+  // Normalize title to a test-friendly id (lowercase, dashed)
+  const sectionId = title.toLowerCase().replace(/\s+/g, "-");
+
+  // Fetch items (albums or songs)
   useEffect(() => {
     if (!endpoint) return;
     let cancelled = false;
@@ -42,7 +45,6 @@ export default function Section({
       .get(endpoint)
       .then((res) => {
         if (!cancelled) {
-          // for albums endpoint the API returns an array; for songs same
           setItems(res.data || []);
           setLoading(false);
         }
@@ -58,7 +60,7 @@ export default function Section({
     };
   }, [endpoint]);
 
-  // If songs mode, fetch genres from tabsEndpoint
+  // If songs mode, fetch genres
   useEffect(() => {
     if (mode !== "songs" || !tabsEndpoint) return;
     let cancelled = false;
@@ -66,15 +68,15 @@ export default function Section({
       .get(tabsEndpoint)
       .then((res) => {
         if (!cancelled) {
-          // API returns { data: [{key, label}, ...] }
-          const g = (res.data && res.data.data) || [];
+          // some APIs return { data: [...] } while others might return [...]
+          const g = res.data && res.data.data ? res.data.data : res.data || [];
           setGenres(g);
-          setSelectedGenreKey("all"); // default to All
+          setSelectedGenreKey("all");
         }
       })
       .catch(() => {
         if (!cancelled) {
-          setGenres([]); // fallback
+          setGenres([]);
         }
       });
     return () => {
@@ -82,55 +84,52 @@ export default function Section({
     };
   }, [mode, tabsEndpoint]);
 
-  // Filter items for songs when a specific genre is selected
+  // Filter songs by selected genre (for songs mode)
   const filteredItems =
     mode === "songs" && selectedGenreKey && selectedGenreKey !== "all"
       ? items.filter((s) => (s.genre && s.genre.key) === selectedGenreKey)
       : items;
 
+  // Render
   return (
-    <section className={styles.section}>
-      {/* Header: title + controls (Collapse/Show All for albums; Tabs for songs) */}
+    <section className={styles.section} data-testid={`${sectionId}-section`}>
       <div className={styles.header}>
-        <h2 className={styles.title}>{title}</h2>
+        <h2 className={styles.title} data-testid={`${sectionId}-title`}>{title}</h2>
 
         {mode === "songs" ? (
-          // Render Tabs (All + fetched genres)
-          <div className={styles.tabsWrapper}>
+          <div className={styles.tabsWrapper} data-testid={`${sectionId}-tabs`}>
             <Tabs
               value={selectedGenreKey}
               onChange={(e, value) => setSelectedGenreKey(value)}
               aria-label={`${title} genres`}
               variant="scrollable"
               scrollButtons="auto"
-              TabIndicatorProps={{ style: { display: "none" } }} // hide default indicator
+              TabIndicatorProps={{ style: { display: "none" } }}
               className={styles.tabs}
             >
               <Tab
                 label="All"
                 value="all"
-                className={`${styles.tabItem} ${
-                  selectedGenreKey === "all" ? styles.tabItemActive : ""
-                }`}
+                className={`${styles.tabItem} ${selectedGenreKey === "all" ? styles.tabItemActive : ""}`}
+                data-testid={`${sectionId}-tab-all`}
               />
               {genres.map((g) => (
                 <Tab
                   key={g.key}
                   label={g.label}
                   value={g.key}
-                  className={`${styles.tabItem} ${
-                    selectedGenreKey === g.key ? styles.tabItemActive : ""
-                  }`}
+                  className={`${styles.tabItem} ${selectedGenreKey === g.key ? styles.tabItemActive : ""}`}
+                  data-testid={`${sectionId}-tab-${g.key}`}
                 />
               ))}
             </Tabs>
           </div>
         ) : (
-          // Albums mode: show Collapse / Show All toggle button
           <button
             className={styles.collapseButton}
             type="button"
             onClick={() => setShowCarousel((v) => !v)}
+            data-testid={`${sectionId}-toggle-button`}
           >
             {showCarousel ? "Show All" : "Collapse"}
           </button>
@@ -139,33 +138,32 @@ export default function Section({
 
       <div className={styles.content}>
         {loading ? (
-          <div className={styles.message}>Loading...</div>
+          <div className={styles.message} data-testid={`${sectionId}-loading`}>Loading...</div>
         ) : error ? (
-          <div className={styles.message}>Failed to load data.</div>
+          <div className={styles.message} data-testid={`${sectionId}-error`}>Failed to load data.</div>
         ) : (
           <>
-            {/* Albums mode: either grid or carousel */}
+            {/* Albums mode: grid (default) */}
             {mode !== "songs" && !showCarousel && (
-              <div className={styles.grid}>
+              <div className={styles.grid} data-testid={`${sectionId}-grid`}>
                 {items.map((itm) => (
                   <Card key={itm.id} album={itm} itemType="album" />
                 ))}
               </div>
             )}
 
+            {/* Albums mode: carousel */}
             {mode !== "songs" && showCarousel && (
-              <Carousel
-                items={items}
-                renderItem={(album) => <Card album={album} itemType="album" />}
-              />
+              <div data-testid={`${sectionId}-carousel`}>
+                <Carousel items={items} renderItem={(album) => <Card album={album} itemType="album" />} />
+              </div>
             )}
 
-            {/* Songs mode: NO grid. Always carousel. filteredItems respects selected genre */}
+            {/* Songs mode: always carousel (filtered by selected genre) */}
             {mode === "songs" && (
-              <Carousel
-                items={filteredItems}
-                renderItem={(song) => <Card album={song} itemType="song" />}
-              />
+              <div data-testid={`${sectionId}-carousel`}>
+                <Carousel items={filteredItems} renderItem={(song) => <Card album={song} itemType="song" />} />
+              </div>
             )}
           </>
         )}

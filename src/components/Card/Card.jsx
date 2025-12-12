@@ -12,30 +12,36 @@ import PropTypes from "prop-types";
  *  - itemType: "album" | "song" (default "album")
  */
 export default function Card({ album = {}, itemType = "album" }) {
-  // album param could be actually a song when itemType==='song'
   const title = album.title || "Untitled";
   const image = album.image || album.cover || "";
-  const follows = album.follows; // albums have follows
-  const likes = album.likes; // songs have likes
+  const follows = album.follows;
+  const likes = album.likes;
+  const chipLabel = itemType === "song" ? `${likes ?? 0} likes` : `${follows ?? 0} follows`;
 
-  const chipLabel =
-    itemType === "song" ? `${likes ?? 0} likes` : `${follows ?? 0} follows`;
+  // stable test id (use slug if available, else id)
+  const idForTest = (album.slug && album.slug) || album.id || title;
 
   return (
-    <div className={styles.card} role="article" aria-label={`${itemType} ${title}`}>
+    <div
+      className={styles.card}
+      role="article"
+      aria-label={`${itemType} ${title}`}
+      data-testid={`card-${idForTest}`}
+    >
       <div className={styles.imageWrapper}>
         <img
           src={image || "/assets/album-placeholder.png"}
           alt={title}
           className={styles.image}
+          data-testid={`card-img-${idForTest}`}
         />
-        <div className={styles.chipWrapper}>
+        <div className={styles.chipWrapper} data-testid={`card-chip-${idForTest}`}>
           <Chip label={chipLabel} size="small" />
         </div>
       </div>
 
       <div className={styles.bottom}>
-        <p className={styles.title}>{title}</p>
+        <p className={styles.title} data-testid={`card-title-${idForTest}`}>{title}</p>
       </div>
     </div>
   );
