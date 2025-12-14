@@ -19,7 +19,7 @@ import Tab from "@mui/material/Tab";
 export default function Section({
   title = "Section",
   endpoint,
-  mode = "albums",
+  mode,
   tabsEndpoint,
 }) {
   const [items, setItems] = useState([]);
@@ -131,7 +131,7 @@ export default function Section({
             onClick={() => setShowCarousel((v) => !v)}
             data-testid={`${sectionId}-toggle-button`}
           >
-            {showCarousel ? "Show All" : "Collapse"}
+            {showCarousel ? "Collapse" : "Show All"}
           </button>
         )}
       </div>
@@ -171,3 +171,50 @@ export default function Section({
     </section>
   );
 }
+
+
+// import React, { useEffect, useState } from "react";
+// import axios from "axios";
+// import Card from "../Card/Card";
+// import Carousel from "../Carousel/Carousel";
+// import styles from "./Section.module.css";
+
+// function Section({ title, endpoint }) {
+//   const [albums, setAlbums] = useState([]);
+//   const [collapsed, setCollapsed] = useState(false);
+
+//   useEffect(() => {
+//     axios.get(endpoint).then((res) => {
+//       setAlbums(res.data);
+//     });
+//   }, [endpoint]);
+
+//   return (
+//     <div className={styles.section}>
+//       {/* HEADER */}
+//       <div className={styles.header}>
+//         <h3>{title}</h3>
+//         <button
+//           className={styles.toggleBtn}
+//           onClick={() => setCollapsed(!collapsed)}
+//         >
+//           {collapsed ? "Show All" : "Collapse"}
+//         </button>
+//       </div>
+
+//       {/* CONTENT */}
+//       {!collapsed ? (
+//         <div className={styles.grid}>
+//           {albums.map((album) => (
+//             <Card key={album.id} data={album} />
+//           ))}
+//         </div>
+//       ) : (
+//         <Carousel data={albums} renderItem={(item) => <Card data={item} />} />
+//       )}
+//     </div>
+//   );
+// }
+
+// export default Section;
+
